@@ -6,17 +6,20 @@ import argparse
 LISTE_CSV_DIR = "liste_csv"
 RECAP_CSV_DIR = "recap_csv"
 
-
 def ensure_directories():
     """Crée les dossiers nécessaires s'ils n'existent pas."""
     os.makedirs(LISTE_CSV_DIR, exist_ok=True)
     os.makedirs(RECAP_CSV_DIR, exist_ok=True)
 
+def get_file_path(file_name, is_recap):
+    """Renvoie le chemin complet du fichier selon qu'il s'agit d'un fichier récapitulatif ou non."""
+    directory = RECAP_CSV_DIR if is_recap else LISTE_CSV_DIR
+    return os.path.join(directory, file_name)
 
 def create_csv(file_name):
     """Crée un fichier CSV dans le dossier liste_csv avec des colonnes prédéfinies."""
     ensure_directories()
-    file_path = os.path.join(LISTE_CSV_DIR, file_name)
+    file_path = get_file_path(file_name, is_recap=False)
 
     if os.path.exists(file_path):
         print(f"Le fichier '{file_path}' existe déjà.")
@@ -29,11 +32,10 @@ def create_csv(file_name):
 
     print(f"Fichier '{file_path}' créé avec les colonnes : {', '.join(headers)}.")
 
-
-def add_product(file_name, product_info):
-    """Ajoute une ligne au fichier CSV existant dans le dossier liste_csv."""
+def add_product(file_name, product_info, is_recap):
+    """Ajoute une ligne au fichier CSV existant (liste ou récapitulatif)."""
     ensure_directories()
-    file_path = os.path.join(LISTE_CSV_DIR, file_name)
+    file_path = get_file_path(file_name, is_recap)
 
     if not os.path.exists(file_path):
         print(f"Le fichier '{file_path}' n'existe pas. Veuillez le créer d'abord.")
@@ -45,11 +47,10 @@ def add_product(file_name, product_info):
 
     print(f"Produit ajouté au fichier '{file_path}'.")
 
-
-def delete_product(file_name, product_name):
-    """Supprime une ligne d'un fichier CSV dans le dossier liste_csv en fonction du nom du produit."""
+def delete_product(file_name, product_name, is_recap):
+    """Supprime une ligne d'un fichier CSV en fonction du nom du produit."""
     ensure_directories()
-    file_path = os.path.join(LISTE_CSV_DIR, file_name)
+    file_path = get_file_path(file_name, is_recap)
 
     if not os.path.exists(file_path):
         print(f"Le fichier '{file_path}' n'existe pas.")
@@ -77,12 +78,11 @@ def delete_product(file_name, product_name):
     else:
         print(f"Produit '{product_name}' non trouvé dans le fichier '{file_path}'.")
 
-
 def merge_csv(input_files, output_file):
     """Fusionne plusieurs fichiers CSV depuis liste_csv et sauvegarde le fichier récapitulatif dans recap_csv."""
     ensure_directories()
-    input_paths = [os.path.join(LISTE_CSV_DIR, file) for file in input_files]
-    output_path = os.path.join(RECAP_CSV_DIR, output_file)
+    input_paths = [get_file_path(file, is_recap=False) for file in input_files]
+    output_path = get_file_path(output_file, is_recap=True)
 
     header_written = False
 
@@ -108,11 +108,10 @@ def merge_csv(input_files, output_file):
 
     print(f"Fichier récapitulatif créé : {output_path}")
 
-
-def search_product_in_recap(recap_file, product_name):
-    """Recherche un produit dans un fichier récapitulatif et affiche ses informations."""
+def search_product(file_name, product_name, is_recap):
+    """Recherche un produit dans un fichier CSV (individuel ou récapitulatif) et affiche ses informations."""
     ensure_directories()
-    file_path = os.path.join(RECAP_CSV_DIR, recap_file)
+    file_path = get_file_path(file_name, is_recap)
 
     if not os.path.exists(file_path):
         print(f"Le fichier '{file_path}' n'existe pas.")
@@ -124,13 +123,12 @@ def search_product_in_recap(recap_file, product_name):
 
         for row in reader:
             if row[0] == product_name:
-                print(f"Produit trouvé :")
+                print(f"Produit trouvé dans {'recapitulatif' if is_recap else 'fichier individuel'} '{file_name}':")
                 for header, value in zip(headers, row):
                     print(f"{header}: {value}")
                 return
 
-    print(f"Produit '{product_name}' non trouvé dans le fichier '{file_path}'.")
-
+    print(f"Produit '{product_name}' non trouvé dans le fichier '{file_name}'.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gérer les fichiers CSV (création, ajout, suppression, fusion, recherche).")
@@ -142,6 +140,8 @@ if __name__ == "__main__":
     parser.add_argument("--product_name", help="Nom du produit à supprimer ou rechercher.")
     parser.add_argument("--input_files", nargs='+', help="Liste des fichiers CSV à fusionner (pour 'merge').")
     parser.add_argument("--output_file", help="Nom du fichier récapitulatif (pour 'merge').")
+    parser.add_argument("--is_recap", action="store_true",
+                        help="Indique si l'opération concerne un fichier récapitulatif.")
 
     args = parser.parse_args()
 
@@ -149,12 +149,12 @@ if __name__ == "__main__":
         create_csv(args.file_name)
     elif args.action == 'add':
         if args.product_info:
-            add_product(args.file_name, args.product_info)
+            add_product(args.file_name, args.product_info, args.is_recap)
         else:
             print("Veuillez fournir les informations du produit avec l'option '--product_info'.")
     elif args.action == 'delete':
         if args.product_name:
-            delete_product(args.file_name, args.product_name)
+            delete_product(args.file_name, args.product_name, args.is_recap)
         else:
             print("Veuillez fournir le nom du produit à supprimer avec l'option '--product_name'.")
     elif args.action == 'merge':
@@ -164,6 +164,6 @@ if __name__ == "__main__":
             print("Veuillez fournir les fichiers d'entrée avec '--input_files' et le fichier de sortie avec '--output_file'.")
     elif args.action == 'search':
         if args.product_name:
-            search_product_in_recap(args.file_name, args.product_name)
+            search_product(args.file_name, args.product_name, args.is_recap)
         else:
             print("Veuillez fournir le nom du produit à rechercher avec l'option '--product_name'.")
