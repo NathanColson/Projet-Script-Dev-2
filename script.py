@@ -6,10 +6,12 @@ import argparse
 LISTE_CSV_DIR = "liste_csv"
 RECAP_CSV_DIR = "recap_csv"
 
+
 def ensure_directories():
     """Crée les dossiers nécessaires s'ils n'existent pas."""
     os.makedirs(LISTE_CSV_DIR, exist_ok=True)
     os.makedirs(RECAP_CSV_DIR, exist_ok=True)
+
 
 def create_csv(file_name):
     """Crée un fichier CSV dans le dossier liste_csv avec des colonnes prédéfinies."""
@@ -27,6 +29,7 @@ def create_csv(file_name):
 
     print(f"Fichier '{file_path}' créé avec les colonnes : {', '.join(headers)}.")
 
+
 def add_product(file_name, product_info):
     """Ajoute une ligne au fichier CSV existant dans le dossier liste_csv."""
     ensure_directories()
@@ -41,6 +44,7 @@ def add_product(file_name, product_info):
         writer.writerow(product_info)
 
     print(f"Produit ajouté au fichier '{file_path}'.")
+
 
 def delete_product(file_name, product_name):
     """Supprime une ligne d'un fichier CSV dans le dossier liste_csv en fonction du nom du produit."""
@@ -73,6 +77,7 @@ def delete_product(file_name, product_name):
     else:
         print(f"Produit '{product_name}' non trouvé dans le fichier '{file_path}'.")
 
+
 def merge_csv(input_files, output_file):
     """Fusionne plusieurs fichiers CSV depuis liste_csv et sauvegarde le fichier récapitulatif dans recap_csv."""
     ensure_directories()
@@ -103,6 +108,7 @@ def merge_csv(input_files, output_file):
 
     print(f"Fichier récapitulatif créé : {output_path}")
 
+
 def search_product_in_recap(recap_file, product_name):
     """Recherche un produit dans un fichier récapitulatif et affiche ses informations."""
     ensure_directories()
@@ -124,6 +130,7 @@ def search_product_in_recap(recap_file, product_name):
                 return
 
     print(f"Produit '{product_name}' non trouvé dans le fichier '{file_path}'.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gérer les fichiers CSV (création, ajout, suppression, fusion, recherche).")
