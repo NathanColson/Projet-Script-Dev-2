@@ -45,24 +45,24 @@ Assurez-vous d'avoir les éléments suivants installés sur votre machine :
 
 ### 1. **Clonez le projet :**
 
-    ```bash
-    git clone https://github.com/votre-repo/gestionnaire-csv.git
-    cd projet-script-dev-2/
-    ```
+```bash
+git clone https://github.com/votre-repo/gestionnaire-csv.git
+cd projet-script-dev-2/
+```
 
 ### 2. **Installez les dépendances (si nécessaire) :**
 
-    Aucune dépendance externe n'est requise pour ce projet. Tout est inclus avec Python standard.
+Aucune dépendance externe n'est requise pour ce projet. Tout est inclus avec Python standard.
 
 ### 3. **Vérifiez l'installation :**
 
-    Lancez la commande suivante pour vérifier que le script est fonctionnel :
+Lancez la commande suivante pour vérifier que le script est fonctionnel :
 
-    ```bash
-    python gestion_csv.py -h
-    ```
+```bash
+python gestion_csv.py -h
+```
 
-    Vous devriez voir le guide d'utilisation de l'application.
+Vous devriez voir le guide d'utilisation de l'application.
 
 ---
 
@@ -76,28 +76,28 @@ python script.py <action> <file_name> [options]
 
 ### **1. Création de fichiers CSV**
 
-Pour créer un fichier CSV :
+**Pour créer un fichier CSV :**
 ```bash
 python script.py create produits.csv
 ```
 
 ### **2. Ajout de produits**
 
-Pour ajouter un produit dans un fichier CSV existant :
+**Pour ajouter un produit dans un fichier CSV existant :**
 ```bash
 python script.py add produits.csv --product_info "Banane" 10 1.5 "Fruits"
 ```
 
 ### **3. Suppression de produits**
 
-Pour supprimer un produit d'un fichier CSV existant :
+**Pour supprimer un produit d'un fichier CSV existant :**
 ```bash
 python script.py delete produits.csv --product_name "Banane"
 ```
 
 ### **4. Fusion de fichiers CSV**
 
-Pour fusionner plusieurs fichiers CSV dans un fichier récapitulatif :
+**Pour fusionner plusieurs fichiers CSV dans un fichier récapitulatif :**
 ```bash
 python script.py merge recapitulatif.csv --input_files produits1.csv produits2.csv
 ```
@@ -106,25 +106,26 @@ python script.py merge recapitulatif.csv --input_files produits1.csv produits2.c
 
 Pour rechercher un produit dans un fichier CSV :
 
-Par nom :
+**Par nom :**
 ```bash
 python script.py search produits.csv --product_name "Banane"
 ```
-Par catégorie :
+**Par catégorie :**
 ```bash
 python script.py search produits.csv --product_categ "Fruits"
 ```
 
-Par prix :
+**Par prix :**
 ```bash
 python script.py search produits.csv --product_prize 1.5
 ```
 ---
 ## Structure des dossiers
+
 Le programme crée automatiquement deux dossiers :
 
-liste_csv : Contient les fichiers CSV individuels.
-recap_csv : Contient les fichiers récapitulatifs après fusion.
+**liste_csv** : Contient les fichiers CSV individuels.
+**recap_csv** : Contient les fichiers récapitulatifs après fusion.
 
 ---
 
@@ -132,18 +133,18 @@ recap_csv : Contient les fichiers récapitulatifs après fusion.
 
 ### **1. Exemple complet d'ajout et de recherche**
 
-Création du fichier CSV :
+**Création du fichier CSV :**
 ```bash
 python script.py create produits.csv
 ```
 
-Ajout de produits :
+**Ajout de produits :**
 ```bash
 python script.py add produits.csv --product_info "Pomme" 50 0.5 "Fruits"
 python script.py add produits.csv --product_info "Carotte" 30 0.2 "Légumes"
 ```
 
-Recherche d'un produit par catégorie :
+**Recherche d'un produit par catégorie :**
 ```bash
 python script.py search produits.csv --product_categ "Fruits"
 ```
@@ -155,7 +156,7 @@ Fichiers source :
 produits1.csv contient des fruits.
 produits2.csv contient des légumes.
 
-Fusion :
+**Fusion :**
 ```bash
 python script.py merge recapitulatif.csv --input_files produits1.csv produits2.csv
 ```
@@ -166,7 +167,7 @@ python script.py merge recapitulatif.csv --input_files produits1.csv produits2.c
 
 ### **Nathan Colson**
 
-Avec l'aide de CHATGPT (plus d'info dans mon analyse utilisation de IA)
+Avec l'aide de **CHATGPT** (plus d'info dans mon analyse utilisation de IA)
 
 --- 
 
