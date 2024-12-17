@@ -1,0 +1,18 @@
+# Dossiers et fichiers générés par Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environnements virtuels
+venv/
+env/
+
+# Fichiers de configuration locaux
+*.log
+.env
+
+# Dossiers et fichiers spécifiques à certains outils
+.idea/
+.vscode/
+.DS_Store
