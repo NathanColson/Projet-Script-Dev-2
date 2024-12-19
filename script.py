@@ -1,79 +1,39 @@
 import csv
 import os
 import argparse
+import cmd
 
 
 class GestionCSV:
+    """
+    Cette classe gère la création, la modification, la recherche, et la fusion
+    de fichiers CSV dans des répertoires spécifiques.
+    """
     LISTE_CSV_DIR = "liste_csv"
     RECAP_CSV_DIR = "recap_csv"
 
     def __init__(self):
-        """
-        Description :
-         Initialise la classe et crée les répertoires nécessaires.
-
-        PRE :
-        - Aucun prérequis.
-
-         POST :
-        - Les répertoires `LISTE_CSV_DIR` et `RECAP_CSV_DIR` existent.
-
-        RAISES :
-        - OSError si un problème survient lors de la création des répertoires.
-        """
         self.ensure_directories()
 
     def ensure_directories(self):
         """
-        Description :
-        Crée les dossiers nécessaires pour les fichiers CSV.
-
-        PRE :
-        - Aucun prérequis.
-
-        POST :
-        - Les répertoires `LISTE_CSV_DIR` et `RECAP_CSV_DIR` existent (créés s'ils n'existent pas déjà).
-
-        RAISES :
-        - OSError si un problème survient lors de la création des répertoires.
+        Crée les répertoires nécessaires s'ils n'existent pas déjà.
         """
         os.makedirs(self.LISTE_CSV_DIR, exist_ok=True)
         os.makedirs(self.RECAP_CSV_DIR, exist_ok=True)
 
     def get_file_path(self, file_name, is_recap):
         """
-        Description :
-        Renvoie le chemin complet d'un fichier (liste ou récapitulatif).
-
-        PRE :
-        - `file_name` est une chaîne valide représentant un nom de fichier.
-        - `is_recap` est un booléen indiquant si le fichier est un fichier récapitulatif.
-
-        POST :
-        - Retourne un chemin valide sous forme de chaîne.
-
-        RAISES :
-        - Aucun.
+        Renvoie le chemin complet du fichier CSV, en fonction du fait qu'il s'agit
+        d'un fichier récapitulatif ou non.
         """
         directory = self.RECAP_CSV_DIR if is_recap else self.LISTE_CSV_DIR
         return os.path.join(directory, file_name)
 
     def create_csv(self, file_name):
         """
-        Description :
-        Crée un fichier CSV avec des colonnes prédéfinies dans le dossier liste_csv.
-
-        PRE :
-        - `file_name` est une chaîne valide représentant un nom de fichier.
-
-        POST :
-        - Un fichier CSV est créé dans le répertoire `LISTE_CSV_DIR` avec les colonnes 
-          ['nom du produit', 'quantité', 'prix unitaire', 'catégorie'].
-        - Si le fichier existe déjà, aucune action n'est effectuée.
-
-        RAISES :
-        - OSError si un problème survient lors de la création ou de l'écriture du fichier.
-    """
+        Crée un fichier CSV avec des entêtes prédéfinies s'il n'existe pas déjà.
+        """
         file_path = self.get_file_path(file_name, is_recap=False)
 
         if os.path.exists(file_path):
@@ -89,19 +49,8 @@ class GestionCSV:
 
     def add_product(self, file_name, product_info, is_recap):
         """
-        Description :
-        Ajoute un produit dans un fichier CSV existant (liste ou récapitulatif).
-
-        PRE :
-        - `is_recap` est un booléen indiquant si l'opération concerne un fichier récapitulatif.
-
-        POST :
-        - Une nouvelle ligne représentant le produit est ajoutée au fichier spécifié.
-
-        RAISES :
-        - FileNotFoundError si le fichier spécifié n'existe pas.
-        - ValueError si `product_info` ne contient pas exactement 4 éléments.
-        - OSError si un problème survient lors de l'ouverture ou de l'écriture du fichier.
+        Ajoute un produit (ligne) dans le fichier CSV spécifié.
+        product_info est une liste au format [nom, quantite, prix, categorie].
         """
         file_path = self.get_file_path(file_name, is_recap)
 
@@ -117,20 +66,7 @@ class GestionCSV:
 
     def delete_product(self, file_name, product_name, is_recap):
         """
-        Description :
-        Supprime une ligne d'un fichier CSV en fonction du nom du produit.
-
-        PRE :
-        - `product_name` est une chaîne représentant le nom du produit à supprimer.
-        - `is_recap` est un booléen indiquant si l'opération concerne un fichier récapitulatif.
-
-        POST :
-        - Le fichier CSV est mis à jour avec le produit correspondant à `product_name` supprimé.
-        - Si le produit n'existe pas, le fichier reste inchangé.
-
-        RAISES :
-        - FileNotFoundError si le fichier spécifié n'existe pas.
-        - OSError si un problème survient lors de la manipulation des fichiers temporaires.
+        Supprime toutes les occurrences (toutes les lignes) du produit spécifié par son nom.
         """
         file_path = self.get_file_path(file_name, is_recap)
 
@@ -139,6 +75,8 @@ class GestionCSV:
             return
 
         temp_file = file_path + '.tmp'
+        lines_deleted = 0
+
         with open(file_path, mode='r', encoding='utf-8') as infile, open(temp_file, mode='w', newline='', encoding='utf-8') as outfile:
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
@@ -146,38 +84,22 @@ class GestionCSV:
             headers = next(reader)
             writer.writerow(headers)
 
-            line_deleted = False
             for row in reader:
-                if row[0] != product_name:
-                    writer.writerow(row)
+                if row[0] == product_name:
+                    lines_deleted += 1
                 else:
-                    line_deleted = True
+                    writer.writerow(row)
 
         os.replace(temp_file, file_path)
 
-        if line_deleted:
-            print(f"Produit '{product_name}' supprimé du fichier '{file_path}'.")
+        if lines_deleted > 0:
+            print(f"{lines_deleted} occurrence(s) du produit '{product_name}' ont été supprimées du fichier '{file_path}'.")
         else:
             print(f"Produit '{product_name}' non trouvé dans le fichier '{file_path}'.")
 
     def merge_csv(self, input_files, output_file):
         """
-        Description :
-        Fusionne plusieurs fichiers CSV de `LISTE_CSV_DIR` et enregistre le résultat 
-        dans un fichier récapitulatif dans `RECAP_CSV_DIR`.
-
-        PRE :
-        - `input_files` est une liste de noms de fichiers existants dans `LISTE_CSV_DIR`.
-        - `output_file` est une chaîne valide représentant le nom du fichier récapitulatif.
-
-        POST :
-        - Un fichier récapitulatif est créé dans `RECAP_CSV_DIR`, contenant les données fusionnées
-          de tous les fichiers spécifiés dans `input_files`.
-        - Si un fichier d'entrée est introuvable, il est ignoré avec un message d'erreur.
-
-        RAISES :
-        - FileNotFoundError si aucun des fichiers spécifiés n'existe.
-        - OSError si un problème survient lors de la lecture ou de l'écriture des fichiers.
+        Fusionne plusieurs fichiers CSV individuels en un seul fichier récapitulatif.
         """
         input_paths = [self.get_file_path(file, is_recap=False) for file in input_files]
         output_path = self.get_file_path(output_file, is_recap=True)
@@ -208,22 +130,8 @@ class GestionCSV:
 
     def search_product(self, file_name, product_name=None, product_categ=None, product_prize=None, product_quantity=None, is_recap=False):
         """
-        Description :
-        Recherche un produit dans un fichier CSV par nom, catégorie, prix ou quantité et affiche ses informations.
-
-        PRE :
-        - `file_name` est une chaîne valide représentant un fichier existant.
-        - `product_name`, `product_categ`, `product_prize`, ou `product_quantity` peuvent être spécifiés 
-          pour définir le critère de recherche.
-        - `is_recap` est un booléen indiquant si la recherche doit se faire dans un fichier récapitulatif.
-
-        POST :
-        - Les produits correspondant aux critères sont affichés dans la console.
-        - Si aucun produit ne correspond, un message d'information est affiché.
-
-        RAISES :
-        - FileNotFoundError si le fichier spécifié n'existe pas.
-        - OSError si un problème survient lors de la lecture du fichier.
+        Recherche des produits dans un fichier CSV en fonction de différents critères.
+        Affiche toutes les lignes correspondant à ces critères.
         """
         file_path = self.get_file_path(file_name, is_recap)
 
@@ -237,10 +145,11 @@ class GestionCSV:
 
             found = False
             for row in reader:
-                if (product_name and row[0] == product_name) or \
-                    (product_categ and row[3] == product_categ) or \
-                    (product_prize and row[2] == product_prize) or \
-                    (product_quantity and row[1] == product_quantity):
+                if ((product_name and row[0] == product_name) or
+                    (product_categ and row[3] == product_categ) or
+                    (product_prize and row[2] == product_prize) or
+                    (product_quantity and row[1] == product_quantity)):
+
                     if not found:
                         print(f"Produits trouvés dans {'recapitulatif' if is_recap else 'fichier individuel'} '{file_name}':")
                         found = True
@@ -252,46 +161,187 @@ class GestionCSV:
                 print(f"Aucun produit trouvé correspondant aux critères dans le fichier '{file_name}'.")
 
 
-if __name__ == "__main__":
+class InterfaceInteractif(cmd.Cmd):
+    """
+    Classe fournissant une interface en ligne de commande interactive
+    pour utiliser les fonctionnalités de GestionCSV.
+    """
+    intro = (
+        "Bienvenue dans le gestionnaire CSV interactif.\n"
+        "Tapez 'help' pour voir les commandes disponibles.\n"
+    )
+    prompt = "(csv) "
+
+    def __init__(self, gestion_csv):
+        super().__init__()
+        self.gestion_csv = gestion_csv
+
+    def do_create(self, arg):
+        """
+        Créer un fichier CSV.
+        Usage: create nom_fichier.csv
+        """
+        args = arg.strip().split()
+        if len(args) != 1:
+            print("Usage: create nom_fichier.csv")
+            return
+        file_name = args[0]
+        self.gestion_csv.create_csv(file_name)
+
+    def do_add(self, arg):
+        """
+        Ajouter un produit au fichier CSV.
+        Usage: add nom_fichier.csv nom_produit quantite prix categorie
+        """
+        args = arg.strip().split()
+        if len(args) != 5:
+            print("Usage: add nom_fichier.csv nom_produit quantite prix categorie")
+            return
+
+        file_name, nom, quantite, prix, categorie = args
+        product_info = [nom, quantite, prix, categorie]
+        self.gestion_csv.add_product(file_name, product_info, is_recap=False)
+
+    def do_delete(self, arg):
+        """
+        Supprimer un produit (toutes les occurrences) du fichier CSV.
+        Usage: delete nom_fichier.csv nom_produit
+        """
+        args = arg.strip().split()
+        if len(args) != 2:
+            print("Usage: delete nom_fichier.csv nom_produit")
+            return
+
+        file_name, product_name = args
+        self.gestion_csv.delete_product(file_name, product_name, is_recap=False)
+
+    def do_merge(self, arg):
+        """
+        Fusionner plusieurs fichiers CSV individuels en un fichier récapitulatif.
+        Usage: merge nom_recap.csv fichier1.csv fichier2.csv ...
+        """
+        args = arg.strip().split()
+        if len(args) < 2:
+            print("Usage: merge nom_recap.csv fichier1.csv fichier2.csv ...")
+            return
+
+        output_file = args[0]
+        input_files = args[1:]
+        self.gestion_csv.merge_csv(input_files, output_file)
+
+    def do_search(self, arg):
+        """
+        Rechercher un produit selon différents critères.
+        Usage: search nom_fichier.csv [--product_name "X"] [--product_categ "X"] [--product_prize "X"] [--product_quantity "X"]
+        Exemple: search voiture.csv --product_name "Tesla"
+        """
+        args = arg.strip().split()
+        if len(args) < 1:
+            print("Usage: search nom_fichier.csv [options]")
+            return
+
+        file_name = args[0]
+        # Extraction des options
+        product_name = None
+        product_categ = None
+        product_prize = None
+        product_quantity = None
+
+        # Parse simple des arguments restants
+        for i in range(1, len(args)):
+            if args[i] == "--product_name" and i+1 < len(args):
+                product_name = args[i+1]
+            elif args[i] == "--product_categ" and i+1 < len(args):
+                product_categ = args[i+1]
+            elif args[i] == "--product_prize" and i+1 < len(args):
+                product_prize = args[i+1]
+            elif args[i] == "--product_quantity" and i+1 < len(args):
+                product_quantity = args[i+1]
+
+        self.gestion_csv.search_product(
+            file_name,
+            product_name=product_name,
+            product_categ=product_categ,
+            product_prize=product_prize,
+            product_quantity=product_quantity,
+            is_recap=False
+        )
+
+    def do_exit(self, arg):
+        """Quitter le shell interactif."""
+        print("Au revoir !")
+        return True
+
+    def do_quit(self, arg):
+        """Quitter le shell interactif."""
+        return self.do_exit(arg)
+
+
+def main():
     parser = argparse.ArgumentParser(description="Gérer les fichiers CSV (création, ajout, suppression, fusion, recherche).")
-    parser.add_argument("action", choices=['create', 'add', 'delete', 'merge', 'search'],
-                        help="Action à réaliser : 'create', 'add', 'delete', 'merge', 'search'.")
-    parser.add_argument("file_name", help="Nom du fichier CSV pour 'create', 'add', 'delete' ou 'search'.")
+    parser.add_argument("action", nargs="?", choices=['create', 'add', 'delete', 'merge', 'search'], help="Action à réaliser")
+    parser.add_argument("file_name", nargs="?", help="Nom du fichier CSV")
     parser.add_argument("--product_info", nargs=4, metavar=('NOM', 'QUANTITÉ', 'PRIX', 'CATÉGORIE'),
                         help="Informations du produit à ajouter : nom, quantité, prix unitaire, catégorie.")
-
     parser.add_argument("--product_name", help="Nom du produit à supprimer ou rechercher.")
     parser.add_argument("--product_categ", help="Catégorie du produit à rechercher.")
-    parser.add_argument("--product_prize", help="Prix du produit à rechercher")
-    parser.add_argument("--product_quantity", help="Quantité du produit à rechercher")
-
+    parser.add_argument("--product_prize", help="Prix du produit à rechercher.")
+    parser.add_argument("--product_quantity", help="Quantité du produit à rechercher.")
     parser.add_argument("--input_files", nargs='+', help="Liste des fichiers CSV à fusionner (pour 'merge').")
     parser.add_argument("--output_file", help="Nom du fichier récapitulatif (pour 'merge').")
     parser.add_argument("--is_recap", action="store_true",
                         help="Indique si l'opération concerne un fichier récapitulatif.")
+    parser.add_argument("--interactive", action="store_true", help="Lancer le programme en mode interactif")
 
     args = parser.parse_args()
     gestionnaire = GestionCSV()
 
+    # Si mode interactif, on lance le shell
+    if args.interactive:
+        InterfaceInteractif(gestionnaire).cmdloop()
+        return
+
+    # Mode non-interactif (ligne de commande classique)
     if args.action == 'create':
-        gestionnaire.create_csv(args.file_name)
+        if args.file_name:
+            gestionnaire.create_csv(args.file_name)
+        else:
+            print("Veuillez fournir le nom du fichier à créer.")
+
     elif args.action == 'add':
-        if args.product_info:
+        if args.file_name and args.product_info:
             gestionnaire.add_product(args.file_name, args.product_info, args.is_recap)
         else:
-            print("Veuillez fournir les informations du produit avec l'option '--product_info'.")
+            print("Veuillez fournir le nom du fichier et les informations du produit '--product_info'.")
+
     elif args.action == 'delete':
-        if args.product_name:
+        if args.file_name and args.product_name:
             gestionnaire.delete_product(args.file_name, args.product_name, args.is_recap)
         else:
-            print("Veuillez fournir le nom du produit à supprimer avec l'option '--product_name'.")
+            print("Veuillez fournir le nom du fichier et le nom du produit à supprimer '--product_name'.")
+
     elif args.action == 'merge':
         if args.input_files and args.output_file:
             gestionnaire.merge_csv(args.input_files, args.output_file)
         else:
             print("Veuillez fournir les fichiers d'entrée avec '--input_files' et le fichier de sortie avec '--output_file'.")
+
     elif args.action == 'search':
-        if args.product_name or args.product_categ or args.product_prize or args.product_quantity:
-            gestionnaire.search_product(args.file_name, product_name=args.product_name, product_categ=args.product_categ, product_prize=args.product_prize, product_quantity=args.product_quantity, is_recap=args.is_recap)
+        if args.file_name and (args.product_name or args.product_categ or args.product_prize or args.product_quantity):
+            gestionnaire.search_product(
+                args.file_name,
+                product_name=args.product_name,
+                product_categ=args.product_categ,
+                product_prize=args.product_prize,
+                product_quantity=args.product_quantity,
+                is_recap=args.is_recap
+            )
         else:
-            print("Veuillez fournir le nom du produit à rechercher avec l'option '--product_name' ou '--product_categ' ou '--product_prize' ou '--product_quantity'.")
+            print("Veuillez fournir le nom du fichier et au moins un critère de recherche (--product_name, --product_categ, --product_prize, --product_quantity).")
+
+    else:
+        print("Aucune action spécifiée. Utilisez '--interactive' pour lancer le mode interactif ou précisez une action.") 
+
+
+if __name__ == "__main__":
+    main()
